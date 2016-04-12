@@ -1,0 +1,24 @@
+{
+  "name": "ec2-maintainer",
+  "version": "1.0.0",
+  "description": "Aws scripts for ec2 service maintenance",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "aws",
+    "ec2",
+    "snapshots",
+    "backup",
+    "AMI",
+    "recovery"
+  ],
+  "author": "Ocheje Michael",
+  "license": "MIT",
+  "dependencies": {
+    "aws-sdk": "^2.3.2",
+    "underscore": "^1.8.3",
+    "winston": "^2.2.0"
+  }
+}

@@ -1,0 +1,4 @@
+{
+  "logfile": "/var/log/ec2-maintainer.log",
+  "logenv": "development"
+}

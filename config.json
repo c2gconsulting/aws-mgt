@@ -1,0 +1,5 @@
+{
+	"instanceFilter": ["NAV.PROD.001", "SQL.PROD.001"], 
+	"keepDay": 7, 
+	"snapshotDescription": "Created by ec2-maintainer"
+}
