@@ -1,7 +1,7 @@
 var AWS = require('aws-sdk');
 var _ = require('underscore');
 //var logger = require('./shared/lib/log');
-var config = require('./config.json');
+var config = require('../config.json');
 var region = process.argv[2] || 'eu-central-1';
 //set region
 AWS.config.update({region: region});
