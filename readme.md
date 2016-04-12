@@ -50,7 +50,7 @@ Specify Number of days the snapshots are to be kept:
 
 	"keepDay": 7
 
-Specify snapshot description 
+Specify snapshot description for snapshots that will be created by the ec2-maintainer script
 	
 	"snapshotDescription": "Created by ec2-maintainer"
 
