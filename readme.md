@@ -4,7 +4,7 @@ The Aws-Mgt node js app built upon the aws sdk for javascript.
 IT is developed to be scheduled to run daily and send reports to any administrative email account
 
 ### Aws-Mgt contains the following sub components 
-- [ec2-maintainer](simple script written for managing snapshots of AWS instances)
+- [ec2-maintainer](https://github.com/c2gconsulting/aws-mgt/tree/master/ec2-maintainer)
 	refer to the ec2-maintainer section below for more details.
 
 ### Contributing to Aws-Mgt
@@ -37,7 +37,8 @@ Create a [Pull-Request](https://help.github.com/articles/using-pull-requests/) s
 
 To Run the ec2-maintainer script, from your ec2-maintainer app directory run: 
 
-	$AWS_PROFILE=profile node app.js 'us-east-1'
+	$AWS_PROFILE=profile node app.js 'region'
+    $AWS_PROFILE=default node app.js 'us-east-1'
 
 Tag your instances e.g. with key: 'Name' and Value: 'NAV.PROD.001'
 
