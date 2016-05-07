@@ -14,3 +14,9 @@ shared/tmp
 #Code settings files
 .settings/*
 typings
+
+#Credential file
+credentials.json
+
+#remove .idea file
+.idea

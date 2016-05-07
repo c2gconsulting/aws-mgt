@@ -2,12 +2,25 @@ var AWS = require('aws-sdk');
 var _ = require('underscore');
 //var logger = require('./shared/lib/log');
 var config = require('./config.json');
-var region = process.argv[2] || 'eu-central-1';
+var argv = require('minimist')(process.argv.slice(2));
+
+//set region
+var region = argv.r || 'eu-central-1';
+
+//check if profile credential is passed
+if(!argv.c){
+    console.log("please pass argument -c for credentials e.g -c default ");
+    process.exit(1);
+}
+
+var credentials = new AWS.SharedIniFileCredentials({profile: argv.c});
+AWS.config.credentials = credentials;
+
 //set region
 AWS.config.update({region: region});
 
 
-var ec2 = new AWS.EC2();  
+var ec2 = new AWS.EC2();
 var instance = {
     DryRun: false,
     Filters: [
@@ -24,7 +37,7 @@ var instance = {
     ]
 };
 
-//descibe instances 
+//descibe instances
 var instances;
 ec2.describeInstances(instance, function(error, data) {
   if (error) {
@@ -32,11 +45,11 @@ ec2.describeInstances(instance, function(error, data) {
   } else {
     instances = data.Reservations;
     for(var i=0;i<instances.length;i++){
-      var currentInstance = instances[i].Instances[0].InstanceId
+      var currentInstance = instances[i].Instances[0].InstanceId;
       var EBSDevices = instances[i].Instances[0].BlockDeviceMappings;
       var volumeId = [];  var rootDevice = [];
       var tag = instances[i].Instances[0].Tags; // get all tags of instances
-      //get the name tag 
+      //get the name tag
       var index = _.findLastIndex(tag, {Key: 'Name'});
       var nameTag = tag[index].Value;
       for(var j=0;j<EBSDevices.length;j++){
@@ -51,8 +64,8 @@ ec2.describeInstances(instance, function(error, data) {
 function createSnapshotFromVolume(volumeId, rootDevice, nameTag){
   var todaySnapshot = false;
   //populate time for snapshot life span
-  var timestampLimit = (config.keepDay * 24 * 60 * 60 * 1000);  
-          var volumeFilter = {  
+  var timestampLimit = (config.keepDay * 24 * 60 * 60 * 1000);
+          var volumeFilter = {
             DryRun: false,
             Filters: [
                       {
@@ -61,38 +74,44 @@ function createSnapshotFromVolume(volumeId, rootDevice, nameTag){
                       }
                     ]
         };
-          ec2.describeSnapshots(volumeFilter, function(err, data) {  
+          ec2.describeSnapshots(volumeFilter, function(err, data) {
           if (err){
             console.log(err, err.stack); // an error occurred
-          } 
+          }
           else {
-              for (var j=0;j<data.Snapshots.length;j++) {
-                  var creation = data.Snapshots[j].StartTime;
-                  var createdTimestamp = new Date(creation).getTime();
-                  var lifeSpan = createdTimestamp + timestampLimit;
-                  var timestampNow = new Date().getTime();
-                  if (timestampNow > lifeSpan && snapshotImageFromDescription(data.Snapshots[j].Description)) {
-                      console.log(data.Snapshots[j].SnapshotId + ' ' + data.Snapshots[j].Description + ' is due for removal... ');
-                      removeSnapshot(data.Snapshots[j].SnapshotId);
-                  }
-                  //check if snapshot has been created today for this volume
-                  var today = new Date(); 
-                  var created = new Date(creation);
-                  var backup = (today.toDateString() == created.toDateString());
-                  if (backup) {
-                    todaySnapshot = true; 
-                    console.log('snapshot ' + data.Snapshots[j].SnapshotId + ' was created today');
-                  }
-                  if (j == data.Snapshots.length -1){
-                     //Check if todays snapshot exist and create snapshot if not 
-                      if (!todaySnapshot) {
-                        console.log('snapshot not created for volume ' + volumeId + ' today will now proceed to backup');
-                        createSnapshot(volumeId, rootDevice, nameTag);
+              if (data.Snapshots.length == 0) {
+                  console.log("First Snapshot to be created for volume " + volumeId );
+                  createSnapshot(volumeId, rootDevice, nameTag) ;
+              } else {
+                  for (var j=0;j<data.Snapshots.length;j++) {
+                      var creation = data.Snapshots[j].StartTime;
+                      var createdTimestamp = new Date(creation).getTime();
+                      var lifeSpan = createdTimestamp + timestampLimit;
+                      var timestampNow = new Date().getTime();
+                      if (timestampNow > lifeSpan && snapshotImageFromDescription(data.Snapshots[j].Description)) {
+                          console.log(data.Snapshots[j].SnapshotId + ' ' + data.Snapshots[j].Description + ' is due for removal... ');
+                          removeSnapshot(data.Snapshots[j].SnapshotId);
                       }
+                      //check if snapshot has been created today for this volume
+                      var today = new Date();
+                      var created = new Date(creation);
+                      var backup = (today.toDateString() == created.toDateString());
+                      if (backup) {
+                          todaySnapshot = true;
+                          console.log('snapshot ' + data.Snapshots[j].SnapshotId + ' was created today');
+                      }
+                      if (j == data.Snapshots.length -1){
+                          //Check if todays snapshot exist and create snapshot if not
+                          if (!todaySnapshot) {
+                              console.log('snapshot not created for volume ' + volumeId + ' today will now proceed to backup');
+                              createSnapshot(volumeId, rootDevice, nameTag);
+                          }
+                      }
+
                   }
 
               }
-              
+
           }
         });
 }
@@ -104,12 +123,12 @@ function snapshotImageFromDescription(description){
     }
 }
 
-function createSnapshot(volume_id, mount, name){  
+function createSnapshot(volume_id, mount, name){
   var date = new Date().toDateString();
   //var snapname = name + '@' + date
     var params = {
       VolumeId: volume_id,
-      Description: config.snapshotDescription + ' for ' + name + ' mount on ' + mount + ' ' + date, 
+      Description: config.snapshotDescription + ' for ' + name + ' mount on ' + mount + ' ' + date,
       DryRun: false
     };
 
@@ -122,9 +141,9 @@ function createSnapshot(volume_id, mount, name){
     });
 }
 
-function removeSnapshot(id) {  
+function removeSnapshot(id) {
     var params = {
-      SnapshotId: id, 
+      SnapshotId: id,
       DryRun: false
     };
     ec2.deleteSnapshot(params, function(err, data) {
