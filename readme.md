@@ -40,6 +40,10 @@ To Run the ec2-maintainer script, from your ec2-maintainer app directory run:
 	$AWS_PROFILE=profile node app.js 'region'
     $AWS_PROFILE=default node app.js 'us-east-1'
 
+For Windows machine from the windows branch,
+
+    $node app.js -r 'us-east-1' -c profile_name
+
 Tag your instances e.g. with key: 'Name' and Value: 'NAV.PROD.001'
 
 Add instances in which you want to schedule snapshots in ec2-maintainer/config.json as:
